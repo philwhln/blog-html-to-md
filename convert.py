@@ -7,6 +7,28 @@ from lxml import etree, html
 HTML_DIR = Path('/Users/phil/src/philwhln/philwhln.github.io')
 MARKDOWN_DIR = Path('/Users/phil/src/philwhln/blog/content/posts')
 
+SOCIAL_IMAGE_DEFAULT = '/photo.jpg'
+SOCIAL_IMAGES = {
+    'geohash-intro': '/wp-content/uploads/2011/08/geohash_intro_sq.jpg',
+    '54-hours-in-the-okanagan-building-a-startup': '/wp-content/uploads/2012/03/office_small.jpg',
+    'rollout-degrade-metrics-and-capacity': '/wp-content/uploads/2011/12/rollout-degrade-metrics-and-capacity_sq.jpg',
+    'summifys-technology-examined': '/wp-content/uploads/2011/03/summify_technology_sq.jpg',
+    'an-interview-with-drawn-to-scale': '/wp-content/uploads/2011/02/drawn_to_scale_sq.jpg',
+    'quoras-technology-examined': '/wp-content/uploads/2011/01/quora_microscope_sq.jpg',
+    'run-the-latest-whirr-and-deploy-hbase-in-minutes': '/wp-content/uploads/2011/01/whirr_hbase_sq.jpg',
+    'quickly-launch-a-cassandra-cluster-on-amazon-ec2': '/wp-content/uploads/2011/01/launch_cassandra_amazon_ec2_sq.jpg',
+    'de-volatile-your-memcached-upgrade-to-membase': '/wp-content/uploads/2011/01/memcached_to_membase_sq.jpg',
+    'sqlshell-a-cross-database-sql-tool-with-nosql-potential': '/wp-content/uploads/2011/01/sqlshell_nosql_potential_sq.jpg',
+    'hosting-images-google-storage-manager': '/wp-content/uploads/2011/01/google_storage_sq.jpg',
+    'zero-copy-transfer-data-faster-in-ruby': '/wp-content/uploads/2011/01/zero_copy_ruby_sq.jpg',
+    'the-apache-projects-the-justice-league-of-scalability': '/wp-content/uploads/2011/01/apache_justice_league_sq.jpg',
+    'landsliding-into-postgis-with-kml-files': '/wp-content/uploads/2011/01/postgis_kml_sq.jpg',
+    'embed-base64-encoded-images-inline-in-html': '/wp-content/uploads/2011/01/html_inline_image_sq.jpg',
+    'map-reduce-with-ruby-using-hadoop': '/wp-content/uploads/2010/12/hadoop_ruby_sq.jpg',
+    'homebrew-intro-to-the-mac-os-x-package-installer': '/wp-content/uploads/2010/12/homebrew_intro_sq.jpg',
+    'how-to-get-experience-working-with-large-datasets': '/wp-content/uploads/2010/12/big_dataset_experience_sq.jpg',
+    'find-the-road-to-your-happiness-by-helping-others': '/wp-content/uploads/2010/12/help_others_sq.jpg',
+}
 
 def main():
     convert_posts(HTML_DIR, MARKDOWN_DIR)
@@ -27,11 +49,18 @@ def convert_file(slug, src_path, dst_dir):
 
     tree = html.fromstring(html_content)
     title_raw = tree.xpath('//title/text()')[0]
-    title = title_raw.replace(' | Big Fast Blog', '')
+    title = title_raw.replace('"', '').replace(' | Big Fast Blog', '')
     published_raw = tree.xpath('//abbr[@class="published"]/@title')[0]
     published = dateutil.parser.parse(published_raw)
     tags = tree.xpath('//p[@class="entry-meta"]/span[@class="post_tag"]/a[@rel="tag"]/text()')
-    description = tree.xpath('//head/meta[@name="description"]/@content')[0]
+    description_raw = tree.xpath('//head/meta[@name="description"]/@content')[0]
+    description = description_raw.replace('"', '')
+
+    if slug in SOCIAL_IMAGES:
+        social_image = SOCIAL_IMAGES[slug]
+    else:
+        social_image = SOCIAL_IMAGE_DEFAULT
+
     try:
         post_elements = tree.xpath('//div[@class="entry-content"]/*')
     except IndexError:
@@ -68,10 +97,14 @@ def convert_file(slug, src_path, dst_dir):
         f.write('draft: false\n')
         f.write('slug: "' + slug + '"\n')
         f.write('category: "Software Engineering"\n')
-        f.write('tags:\n')
-        for tag in tags:
-            f.write('  - ' + tag + '\n')
+        if len(tags) == 0:
+            f.write('tags: []\n')
+        else:
+            f.write('tags:\n')
+            for tag in tags:
+                f.write('  - ' + tag + '\n')
         f.write('description: "' + description + '"\n')
+        f.write('socialImage: "' + social_image + '"\n')
         f.write('---\n')
         f.write(post_markdown)
 
