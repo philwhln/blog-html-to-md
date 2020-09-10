@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import dateutil.parser
@@ -7,7 +8,7 @@ from lxml import etree, html
 HTML_DIR = Path('/Users/phil/src/philwhln/philwhln.github.io')
 MARKDOWN_DIR = Path('/Users/phil/src/philwhln/blog/content/posts')
 
-SOCIAL_IMAGE_DEFAULT = '/photo.jpg'
+SOCIAL_IMAGE_DEFAULT = '/images/photo.jpg'
 SOCIAL_IMAGES = {
     'geohash-intro': '/wp-content/uploads/2011/08/geohash_intro_sq.jpg',
     '54-hours-in-the-okanagan-building-a-startup': '/wp-content/uploads/2012/03/office_small.jpg',
@@ -16,9 +17,11 @@ SOCIAL_IMAGES = {
     'an-interview-with-drawn-to-scale': '/wp-content/uploads/2011/02/drawn_to_scale_sq.jpg',
     'quoras-technology-examined': '/wp-content/uploads/2011/01/quora_microscope_sq.jpg',
     'run-the-latest-whirr-and-deploy-hbase-in-minutes': '/wp-content/uploads/2011/01/whirr_hbase_sq.jpg',
-    'quickly-launch-a-cassandra-cluster-on-amazon-ec2': '/wp-content/uploads/2011/01/launch_cassandra_amazon_ec2_sq.jpg',
+    'quickly-launch-a-cassandra-cluster-on-amazon-ec2':
+        '/wp-content/uploads/2011/01/launch_cassandra_amazon_ec2_sq.jpg',
     'de-volatile-your-memcached-upgrade-to-membase': '/wp-content/uploads/2011/01/memcached_to_membase_sq.jpg',
-    'sqlshell-a-cross-database-sql-tool-with-nosql-potential': '/wp-content/uploads/2011/01/sqlshell_nosql_potential_sq.jpg',
+    'sqlshell-a-cross-database-sql-tool-with-nosql-potential':
+        '/wp-content/uploads/2011/01/sqlshell_nosql_potential_sq.jpg',
     'hosting-images-google-storage-manager': '/wp-content/uploads/2011/01/google_storage_sq.jpg',
     'zero-copy-transfer-data-faster-in-ruby': '/wp-content/uploads/2011/01/zero_copy_ruby_sq.jpg',
     'the-apache-projects-the-justice-league-of-scalability': '/wp-content/uploads/2011/01/apache_justice_league_sq.jpg',
@@ -29,6 +32,7 @@ SOCIAL_IMAGES = {
     'how-to-get-experience-working-with-large-datasets': '/wp-content/uploads/2010/12/big_dataset_experience_sq.jpg',
     'find-the-road-to-your-happiness-by-helping-others': '/wp-content/uploads/2010/12/help_others_sq.jpg',
 }
+
 
 def main():
     convert_posts(HTML_DIR, MARKDOWN_DIR)
@@ -69,6 +73,7 @@ def convert_file(slug, src_path, dst_dir):
     markdown_chunks = []
     for post_element in post_elements:
         code_elements = post_element.xpath('.//pre')
+        element_markdown = None
         if len(code_elements) > 0:
             for code_element in code_elements:
                 etree.strip_tags(code_element, 'pre', 'span', 'del', 'small', 'strong')
@@ -81,6 +86,14 @@ def convert_file(slug, src_path, dst_dir):
         markdown_chunks.append(element_markdown)
 
     post_markdown = str.join('\n\n', markdown_chunks)
+
+    comments_elements = tree.xpath('//div[@id="comments"]')
+    comments_html = None
+    if len(comments_elements) > 0:
+        comments_element = comments_elements[0]
+        etree.indent(comments_element, space="  ")
+        comments_html_raw = etree.tostring(comments_element, encoding='unicode', pretty_print=True)
+        comments_html = re.sub('\n\n+', '\n', comments_html_raw).strip()
 
     dst_filename = str.join('', [
         published.strftime('%Y-%m-%d'),
@@ -104,9 +117,14 @@ def convert_file(slug, src_path, dst_dir):
             for tag in tags:
                 f.write('  - ' + tag + '\n')
         f.write('description: "' + description + '"\n')
-        f.write('socialImage: "' + social_image + '"\n')
+        f.write('socialImage:\n')
+        f.write('  publicURL: "' + social_image + '"\n')
         f.write('---\n')
         f.write(post_markdown)
+        f.write('\n\n')
+        if comments_html:
+            f.write(comments_html)
+            f.write('\n\n')
 
 
 if __name__ == '__main__':
