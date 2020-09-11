@@ -35,13 +35,19 @@ SOCIAL_IMAGES = {
 
 CODE_LANGUAGE_KEYWORDS = {
     'ruby': [
-        'eventmachine',
         'ApplicationController',
         'Rails::Application',
-        'get_current_user',
-        'at_exit',
         'SystemExit',
-    ]
+        'at_exit',
+        'eventmachine',
+        'get_current_user',
+    ],
+    '': [
+        'gem install',
+        'phil@air:',
+        'root@localhost:',
+        'ruby -e',
+    ],
 }
 
 
@@ -84,16 +90,18 @@ def convert_file(slug, src_path, dst_dir):
     markdown_chunks = []
     for post_element in post_elements:
         code_elements = post_element.xpath('.//pre')
+        if len(code_elements) == 0 and post_element.tag == 'pre':
+            code_elements = [post_element]
         codeblock_markdown = None
         if len(code_elements) > 0:
             codeblock_language = ''
             for code_element in code_elements:
-                etree.strip_tags(code_element, 'pre', 'span', 'del', 'small', 'strong')
+                etree.strip_tags(code_element, 'del', 'em', 'pre', 'small', 'span', 'strong')
                 code = code_element.text
                 for language, code_keywords in CODE_LANGUAGE_KEYWORDS.items():
                     for keyword in code_keywords:
                         if keyword in code:
-                            codeblock_language = 'ruby'
+                            codeblock_language = language
                 codeblock_markdown = '```' + codeblock_language + '\n' + code + '\n```'
         else:
             codeblock_html = etree.tostring(post_element, encoding='unicode', pretty_print=True)
