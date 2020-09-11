@@ -9,6 +9,7 @@ HTML_DIR = Path('/Users/phil/src/philwhln/philwhln.github.io')
 MARKDOWN_DIR = Path('/Users/phil/src/philwhln/blog/content/posts')
 
 CATEGORY_DEFAULT = "Software Engineering"
+# This is rough bulk remapping of posts. Will do finer-grain once converted
 CATEGORY_REPLACEMENTS = {
     'infrastructure': 'DevOps',
     'start-ups': 'Startups',
@@ -19,6 +20,22 @@ CATEGORY_REPLACEMENTS = {
     'databases': 'DevOps',
     'coding': 'Ruby',
     'uncategorized': 'old',
+    'amazon': 'Startups',
+    'gmail': 'Marketing',
+    'imac': 'Apple',
+    'apple': 'Apple',
+    'battery life': 'Apple',
+    'caller-id': 'Apple',
+    'mobile': 'Apple',
+    'bootstrapping': 'Startups',
+    'aweber': 'Marketing',
+    'facebook': 'Startups',
+    'flash': 'Apple',
+    'software development': 'Software Engineering',
+    'web development': 'Software Engineering',
+    'customer service': 'Startups',
+    'customers': 'Startups',
+    'money': 'Blogging',
 }
 
 SOCIAL_IMAGE_DEFAULT = '/images/photo.jpg'
