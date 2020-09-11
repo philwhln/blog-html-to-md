@@ -33,6 +33,17 @@ SOCIAL_IMAGES = {
     'find-the-road-to-your-happiness-by-helping-others': '/wp-content/uploads/2010/12/help_others_sq.jpg',
 }
 
+CODE_LANGUAGE_KEYWORDS = {
+    'ruby': [
+        'eventmachine',
+        'ApplicationController',
+        'Rails::Application',
+        'get_current_user',
+        'at_exit',
+        'SystemExit',
+    ]
+}
+
 
 def main():
     convert_posts(HTML_DIR, MARKDOWN_DIR)
@@ -73,17 +84,22 @@ def convert_file(slug, src_path, dst_dir):
     markdown_chunks = []
     for post_element in post_elements:
         code_elements = post_element.xpath('.//pre')
-        element_markdown = None
+        codeblock_markdown = None
         if len(code_elements) > 0:
+            codeblock_language = ''
             for code_element in code_elements:
                 etree.strip_tags(code_element, 'pre', 'span', 'del', 'small', 'strong')
                 code = code_element.text
-                element_markdown = '```\n' + code + '\n```'
+                for language, code_keywords in CODE_LANGUAGE_KEYWORDS.items():
+                    for keyword in code_keywords:
+                        if keyword in code:
+                            codeblock_language = 'ruby'
+                codeblock_markdown = '```' + codeblock_language + '\n' + code + '\n```'
         else:
-            element_html = etree.tostring(post_element, encoding='unicode', pretty_print=True)
-            element_markdown = html2markdown.convert(element_html)
+            codeblock_html = etree.tostring(post_element, encoding='unicode', pretty_print=True)
+            codeblock_markdown = html2markdown.convert(codeblock_html)
 
-        markdown_chunks.append(element_markdown)
+        markdown_chunks.append(codeblock_markdown)
 
     post_markdown = str.join('\n\n', markdown_chunks)
 
@@ -91,6 +107,8 @@ def convert_file(slug, src_path, dst_dir):
     comments_html = None
     if len(comments_elements) > 0:
         comments_element = comments_elements[0]
+        # remove links (with <a>) and formatted (with <span>)
+        etree.strip_tags(comments_element, 'a', 'span')
         etree.indent(comments_element, space="  ")
         comments_html_raw = etree.tostring(comments_element, encoding='unicode', pretty_print=True)
         comments_html = re.sub('\n\n+', '\n', comments_html_raw).strip()
