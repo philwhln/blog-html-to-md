@@ -8,6 +8,19 @@ from lxml import etree, html
 HTML_DIR = Path('/Users/phil/src/philwhln/philwhln.github.io')
 MARKDOWN_DIR = Path('/Users/phil/src/philwhln/blog/content/posts')
 
+CATEGORY_DEFAULT = "Software Engineering"
+CATEGORY_REPLACEMENTS = {
+    'infrastructure': 'DevOps',
+    'start-ups': 'Startups',
+    'system administration': 'DevOps',
+    'hadoop': 'DevOps',
+    'cassandra': 'DevOps',
+    'membase': 'DevOps',
+    'databases': 'DevOps',
+    'coding': 'Ruby',
+    'uncategorized': 'old',
+}
+
 SOCIAL_IMAGE_DEFAULT = '/images/photo.jpg'
 SOCIAL_IMAGES = {
     'geohash-intro': '/wp-content/uploads/2011/08/geohash_intro_sq.jpg',
@@ -42,6 +55,7 @@ CODE_LANGUAGE_KEYWORDS = {
         'eventmachine',
         'get_current_user',
     ],
+    # don't format bash/sh code. doesn't work well
     '': [
         'gem install',
         'phil@air:',
@@ -64,6 +78,16 @@ def convert_posts(html_dir, markdown_dir):
         convert_file(slug, html_path, markdown_dir)
 
 
+def _choose_category(categories):
+    if len(categories) == 0:
+        return CATEGORY_DEFAULT
+    category = categories[0]
+    lookup = str.lower(category)
+    if lookup in CATEGORY_REPLACEMENTS:
+        return CATEGORY_REPLACEMENTS[lookup]
+    return category
+
+
 def convert_file(slug, src_path, dst_dir):
     with src_path.open('rb') as f:
         html_content = f.read()
@@ -74,6 +98,8 @@ def convert_file(slug, src_path, dst_dir):
     published_raw = tree.xpath('//abbr[@class="published"]/@title')[0]
     published = dateutil.parser.parse(published_raw)
     tags = tree.xpath('//p[@class="entry-meta"]/span[@class="post_tag"]/a[@rel="tag"]/text()')
+    categories = tree.xpath('//p[@class="entry-meta"]/span[@class="category"]/a[@rel="tag"]/text()')
+    category = _choose_category(categories)
     description_raw = tree.xpath('//head/meta[@name="description"]/@content')[0]
     description = description_raw.replace('"', '')
 
@@ -135,7 +161,7 @@ def convert_file(slug, src_path, dst_dir):
         f.write('template: "post"\n')
         f.write('draft: false\n')
         f.write('slug: "' + slug + '"\n')
-        f.write('category: "Software Engineering"\n')
+        f.write('category: "' + category + '"\n')
         if len(tags) == 0:
             f.write('tags: []\n')
         else:
