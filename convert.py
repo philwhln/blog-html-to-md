@@ -135,7 +135,7 @@ def convert_file(slug, src_path, dst_dir):
         code_elements = post_element.xpath('.//pre')
         if len(code_elements) == 0 and post_element.tag == 'pre':
             code_elements = [post_element]
-        codeblock_markdown = None
+        markdown_chunk = None
         if len(code_elements) > 0:
             codeblock_language = ''
             for code_element in code_elements:
@@ -145,12 +145,12 @@ def convert_file(slug, src_path, dst_dir):
                     for keyword in code_keywords:
                         if keyword in code:
                             codeblock_language = language
-                codeblock_markdown = '```' + codeblock_language + '\n' + code + '\n```'
+                markdown_chunk = '```' + codeblock_language + '\n' + code + '\n```'
         else:
-            codeblock_html = etree.tostring(post_element, encoding='unicode', pretty_print=True)
-            codeblock_markdown = html2markdown.convert(codeblock_html)
+            html_chunk = etree.tostring(post_element, encoding='unicode', pretty_print=True)
+            markdown_chunk = html2markdown.convert(html_chunk)
 
-        markdown_chunks.append(codeblock_markdown)
+        markdown_chunks.append(markdown_chunk)
 
     post_markdown = str.join('\n\n', markdown_chunks)
 
